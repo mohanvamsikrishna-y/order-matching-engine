@@ -261,7 +261,4 @@ docker run -p 5000:5000 \
   order-matching-engine
 ```
 
-## Support
-
-For questions or issues, please create an issue in the repository or contact the development team.
 
