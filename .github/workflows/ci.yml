@@ -18,17 +18,14 @@ jobs:
           cache-dependency-path: requirements.txt
       - name: Install deps
         run: |
-          python -m venv .venv
-          . .venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
       - name: Run tests
         env:
           DATABASE_URL: "sqlite:///:memory:"
           SNAPSHOT_INTERVAL_SEC: '0'
           API_KEY: testkey
         run: |
-          . .venv/bin/activate
           pytest -q tests
 
 
