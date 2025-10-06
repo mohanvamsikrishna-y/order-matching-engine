@@ -25,6 +25,7 @@ jobs:
           DATABASE_URL: "sqlite:///:memory:"
           SNAPSHOT_INTERVAL_SEC: '0'
           API_KEY: testkey
+          PYTHONPATH: ${{ github.workspace }}
         run: |
           pytest -q tests
 
