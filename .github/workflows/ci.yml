@@ -27,6 +27,6 @@ jobs:
           API_KEY: testkey
         run: |
           . .venv/bin/activate
-          pytest -q
+          pytest -q tests
 
 
