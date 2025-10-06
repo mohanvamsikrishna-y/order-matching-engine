@@ -125,6 +125,12 @@ response = requests.get("http://localhost:5000/market/AAPL")
 response = requests.get("http://localhost:5000/market/AAPL/depth?levels=10")
 ```
 
+### Demo UI
+
+- Launch the server and open `http://localhost:5000/` to view a minimal demo UI.
+- Use the form to submit BUY/SELL orders (set the `API_KEY` field if your server enforces it).
+- The panel shows best bid/ask and top 10 levels of depth. Use the refresh button to update.
+
 ## Stress Testing
 
 The included stress testing suite can simulate high-frequency trading scenarios:

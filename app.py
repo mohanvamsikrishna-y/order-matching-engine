@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, Blueprint
+from flask import Flask, request, jsonify, Blueprint, render_template
 import os
 import argparse
 import time
@@ -76,9 +76,13 @@ def create_app():
 @bp.route('/', methods=['GET'])
 def index():
     """Root endpoint with quick links/documentation hint"""
+    return render_template('demo.html')
+
+@bp.route('/endpoints', methods=['GET'])
+def list_endpoints():
     return jsonify({
         'service': 'Order Matching Engine',
-        'message': 'Welcome. See available endpoints below.',
+        'message': 'Available endpoints',
         'endpoints': {
             'health': '/health',
             'submit_order': 'POST /orders',
@@ -88,7 +92,8 @@ def index():
             'user_orders': 'GET /orders/user/<user_id>?symbol=<SYMBOL>&status=<STATUS>',
             'trades': 'GET /trades?symbol=<SYMBOL>&user_id=<USER_ID>&limit=<N>',
             'market': 'GET /market/<symbol>',
-            'market_depth': 'GET /market/<symbol>/depth?levels=<N>'
+            'market_depth': 'GET /market/<symbol>/depth?levels=<N>',
+            'market_stream': 'GET /market/<symbol>/stream'
         }
     })
 

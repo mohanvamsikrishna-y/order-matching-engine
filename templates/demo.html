@@ -1,0 +1,151 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Order Matching Engine Demo</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 20px; }
+      .row { display: flex; gap: 16px; flex-wrap: wrap; }
+      .card { border: 1px solid #e3e3e3; border-radius: 8px; padding: 16px; flex: 1; min-width: 320px; }
+      label { display: block; margin: 6px 0 2px; }
+      input, select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; }
+      button { padding: 8px 12px; border: 0; background: #0d6efd; color: white; border-radius: 6px; cursor: pointer; }
+      table { width: 100%; border-collapse: collapse; }
+      th, td { padding: 6px 8px; border-bottom: 1px solid #eee; text-align: left; }
+      .muted { color: #666; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      @media (max-width: 720px){ .grid { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <h2>Order Matching Engine Demo</h2>
+    <p class="muted">Quick demo to place orders and view market data. For writes, set API key if server requires it.</p>
+
+    <div class="row">
+      <div class="card">
+        <h3>Submit Order</h3>
+        <div class="grid">
+          <div>
+            <label>API Key (optional)</label>
+            <input id="apiKey" placeholder="API key if required"/>
+          </div>
+          <div>
+            <label>User ID</label>
+            <input id="userId" placeholder="u1" value="demo_user"/>
+          </div>
+          <div>
+            <label>Symbol</label>
+            <input id="symbol" placeholder="AAPL" value="AAPL"/>
+          </div>
+          <div>
+            <label>Side</label>
+            <select id="side">
+              <option>BUY</option>
+              <option>SELL</option>
+            </select>
+          </div>
+          <div>
+            <label>Quantity</label>
+            <input id="quantity" type="number" value="100"/>
+          </div>
+          <div>
+            <label>Price</label>
+            <input id="price" type="number" step="0.01" value="150"/>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <button id="submitBtn">Submit</button>
+          <span id="submitMsg" class="muted"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Market Data</h3>
+        <div class="grid">
+          <div>
+            <label>Symbol</label>
+            <input id="mdSymbol" value="AAPL"/>
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button id="refreshBtn">Refresh</button>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div>Best Bid: <b id="bestBid">-</b> | Best Ask: <b id="bestAsk">-</b></div>
+        </div>
+        <div style="margin-top:10px" class="grid">
+          <div>
+            <h4>Buy Depth</h4>
+            <table id="buyDepth"><thead><tr><th>Price</th><th>Qty</th></tr></thead><tbody></tbody></table>
+          </div>
+          <div>
+            <h4>Sell Depth</h4>
+            <table id="sellDepth"><thead><tr><th>Price</th><th>Qty</th></tr></thead><tbody></tbody></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+    const $ = (id) => document.getElementById(id);
+
+    function renderDepth(depth){
+      const buyBody = $("buyDepth").querySelector('tbody');
+      const sellBody = $("sellDepth").querySelector('tbody');
+      buyBody.innerHTML = '';
+      sellBody.innerHTML = '';
+      (depth.buy||[]).forEach(([p,q])=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${p}</td><td>${q}</td>`;
+        buyBody.appendChild(tr);
+      });
+      (depth.sell||[]).forEach(([p,q])=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td>${p}</td><td>${q}</td>`;
+        sellBody.appendChild(tr);
+      });
+    }
+
+    async function refreshMarket(){
+      const sym = $("mdSymbol").value.trim().toUpperCase();
+      const mdRes = await fetch(`/market/${sym}`);
+      const md = await mdRes.json();
+      $("bestBid").innerText = md.best_bid ?? '-';
+      $("bestAsk").innerText = md.best_ask ?? '-';
+
+      const depthRes = await fetch(`/market/${sym}/depth?levels=10`);
+      const depth = await depthRes.json();
+      renderDepth(depth.depth || {buy:[], sell:[]});
+    }
+
+    async function submitOrder(){
+      const headers = { 'Content-Type': 'application/json' };
+      const apiKey = $("apiKey").value.trim();
+      if(apiKey) headers['X-API-Key'] = apiKey;
+      const body = JSON.stringify({
+        user_id: $("userId").value.trim() || 'demo_user',
+        symbol: $("symbol").value.trim().toUpperCase(),
+        side: $("side").value,
+        quantity: Number($("quantity").value),
+        price: Number($("price").value)
+      });
+      $("submitMsg").innerText = 'Submitting...';
+      const res = await fetch('/orders', { method: 'POST', headers, body });
+      const data = await res.json();
+      if(res.status === 201){
+        $("submitMsg").innerText = `OK: ${data.order_id}`;
+        refreshMarket();
+      } else {
+        $("submitMsg").innerText = `Error: ${data.error || res.status}`;
+      }
+    }
+
+    $("submitBtn").addEventListener('click', submitOrder);
+    $("refreshBtn").addEventListener('click', refreshMarket);
+    refreshMarket();
+    </script>
+  </body>
+  </html>
+
+
